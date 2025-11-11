@@ -33,6 +33,7 @@ int main(int argc, const char * argv[]) {
     double freq;                                            // [ rad/s ] - Frequência de oscilação da onda.
     double theta;                                           // [  rad  ] - Direção angular das partículas.
     double t_fim;                                           // [   s   ] - Tempo total de integração.
+    double L_max;                                           // [   m   ] - Tamanho máximo da caixa.
     double radius;                                          // [   m   ] - Raio das partículas.
     double periodo;                                         // [   s   ] - Período de oscilação da onda.
     double distance;                                        // [   m   ] - Distância entre partículas.
@@ -68,6 +69,7 @@ int main(int argc, const char * argv[]) {
     sscanf(argv[10], "%lf", &periodo);
 
     init_genrand64(seed);
+    L_max = L[1];
 
     freq = 2.0 * M_PI / periodo;
 
@@ -131,24 +133,19 @@ int main(int argc, const char * argv[]) {
         for (i = 1; i <= N; i++) for (k = 1; k <= N_DIMS; k++) v[i][k] += a[i][k] * dt;
 
         //	Calcula as paredes
-        vL[1] = 2.5 * cos(freq * t);
-        for (k = 1; k <= N_DIMS; k++)
-        {
-            if (t > (3.0 * t_fim / 4.0 )) vL[k] = 0.0;
-            L[k] = L[k] + vL[k] * dt;
-        }
+        if (t < (3.0 * t_fim / 4.0)) L[1] = (L_max - 1.0) + 1.0 * cos(freq * t);
 
         //	Aplica as interações
         for (i = 1; i <= N; i++) {
             //	Paredes
             for (k = 1; k <= N_DIMS; k++) {
                 if(r[i][k] >= L[k] && v[i][k] > 0.0){
-                    if (r[i][k] > L[k]) r[i][k] = L[k] - 1e-3;
                     v[i][k] = (-1) * v[i][k] + vL[k];
                     dp_p[k] += -m[i] * 2.0 * v[i][k];
                 }
+                if (r[i][k] > L[k]) r[i][k] = L[k];
                 if(r[i][k] <= 0.0) {
-                    if (r[i][k] < 0.0) r[i][k] = 1e-3;
+                    r[i][k] = 0.0;
                     v[i][k] = (-1) * v[i][k];
                     dp_n[k] += -m[i] * 2.0 * v[i][k];
                 }
