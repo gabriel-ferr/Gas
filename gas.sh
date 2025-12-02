@@ -64,10 +64,31 @@ set view map
 set pm3d map
 set palette rgbformulae 33,13,10
 set colorbox
+set cbrange [0:10]
 set cblabel "Contagem"
 splot 'grid.dat' using 1:2:3 with pm3d notitle
 EOF
+
+  gnuplot -persist << EOF
+set term png
+set output "png/${i}-histo.png"
+set title "Distribuição de partículas no eixo x, frame = ${i}"
+set xlabel "x (ua)"
+set ylabel "Número de partículas"
+set xrange[-0.5:40.5]
+set yrange[-0.5:25.5]
+
+binwidth = 0.5
+bin(x,width) = width * floor(x / width + 0.5)
+
+set boxwidth binwidth
+set style fill solid 0.5
+
+plot 'grid.dat' using (bin(\$1, binwidth)):(\$3) smooth freq with boxes lc rgb "skyblue" notitle
+EOF
+
 done
 
 ffmpeg -y -r 25 -i png/gas-%06d.dat.png -c:v libx264 -r 30 -pix_fmt yuv420p ../$1.mp4
 ffmpeg -y -r 25 -i png/gas-%06d.dat-heatmap.png -c:v libx264 -r 30 -pix_fmt yuv420p ../$1-heatmap.mp4
+ffmpeg -y -r 25 -i png/gas-%06d.dat-histo.png -c:v libx264 -r 30 -pix_fmt yuv420p ../$1-histo.mp4

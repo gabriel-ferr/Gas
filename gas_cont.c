@@ -52,6 +52,10 @@ int main(int argc, const char * argv[]) {
     double v[MAX_PARTICLES + 1][N_DIMS + 1];                // [  m/s  ] - Velocidade das partículas.
     double a[MAX_PARTICLES + 1][N_DIMS + 1];                // [  m/s² ] - Aceleração das partículas.
 
+    double temperatura;                                     // [   K   ] - Temperatura do gás.
+    double v_mean;                                          // [  m/s  ] - Velocidade média da partícula.
+    double v_square_mean;                                   // [m^2/s^2] - Velocidade quadrada da partícula.
+
     char nome[100];                                         // [       ] - Nome do arquivo / pasta de saída.
     unsigned long long seed;                                // [       ] - Semente para o código pseudo-random.
 
@@ -77,7 +81,7 @@ int main(int argc, const char * argv[]) {
 
     f = 0;
     f2 = 0;
-    f3 = 0;
+    f3 = 100;
     for (i = 1; i <= N; i++) {
         m[i] = 2.0;
         for (k = 1; k <= N_DIMS; k++) {
@@ -100,9 +104,11 @@ int main(int argc, const char * argv[]) {
                 fprintf(fo, "%lf %d %lf ", t, i, m[i]);
                 for (k = 1; k <= N_DIMS; k++) fprintf(fo, "%lf ", r[i][k]);
                 for (k = 1; k <= N_DIMS; k++) fprintf(fo, "%lf ", v[i][k]);
+                fprintf(fo, "%lf ", v[i][1] * v[i][1] + v[i][2] * v[i][2]);
+                fprintf(fo, "%lf ", 0.5 * m[i] * (v[i][1] * v[i][1] + v[i][2] * v[i][2]));
                 fprintf(fo, "\n");
             }
-            f = 100;
+            f = 10;
             fclose(fo);
             f2++;
         }
@@ -118,8 +124,20 @@ int main(int argc, const char * argv[]) {
                 press_n[k] = -dp_n[k] / (f3 * dt * LL);
             }
 
+            v_mean = 0.0;
+            v_square_mean = 0.0;
+
+            for (i = 1; i <= N; i++) {
+                v_mean += sqrt(v[i][1] * v[i][1] + v[i][2] * v[i][2]);
+                v_square_mean += v[i][1] * v[i][1] + v[i][2] * v[i][2];
+            }
+
+            v_mean /= N;
+            v_square_mean /= N;
+            temperatura = (m[1] / 2) * v_square_mean;
+
             //	Salva o arquivo.
-            fprintf(fodat, "%lf %lf %lf %lf %lf %lf\n", t, press_p[1], press_p[2], press_n[1], press_n[2], L[1] * L[2]);
+            fprintf(fodat, "%lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf\n", t, press_p[1], press_p[2], press_n[1], press_n[2], L[1] * L[2], v_mean, v_square_mean, sqrt(v_square_mean), temperatura, N * temperatura);
 
             //	Reseta as variáveis.
             dp_p[1] = 0;
@@ -162,7 +180,9 @@ int main(int argc, const char * argv[]) {
                     dp_n[k] += -m[i] * 2.0 * v[i][k];
                 }
             }
+        }
 
+        for (i = 1; i <= N; i++) {
             //	Entre partículas
             for (j = i + 1; j <= N; j++){
                 distance = 0.0;

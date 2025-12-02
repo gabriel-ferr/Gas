@@ -5,14 +5,14 @@ set output "pv.png"
 input = "gas_cont_2.dat"
 
 # Ajuste de curvas
-f(x) = a/x
-fit f(x) input using 6:(($2+$3+$4+$5)/4.0) via a
+A = 1
+gamma = 1.5
 
-stats input using ( $6 * ($2+$3+$4+$5)/4.0 ) name "PV"
+f(x) = A - gamma * x    # A = ln(a)
+fit f(x) input using (log($6)):(log(($2+$3+$4+$5)/4.0)) via A, gamma
 
-print PV_mean
-C = PV_mean
-
+a = exp(A)
+f(v) = a * v**(-gamma)
 
 # Configuração de legenda
 set xlabel "Volume (u.a.)"
@@ -20,9 +20,8 @@ set ylabel "Pressão (u.p.)"
 set grid
 
 # Plot
-plot input u ($6):(($2 + $3 + $4 + $5)/4.0) with points pt 7 ps 0.5 title "Dados", \
-     f(x) w l lw 2 title sprintf("ajuste: P = %.1f/V", a), \
-     C/x w l lw 2 title sprintf("P = %.1f/V", C)
+plot input u ($6):(($2 + $3 + $4 + $5)/4.0) with points pt 7 ps 0.8 title "Dados", \
+     f(x) w l lw 2 title sprintf("ajuste: PV^{%.1f} = cte", gamma)
 
 # Fecha o arquivo
 unset output

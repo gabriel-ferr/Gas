@@ -106,6 +106,8 @@ int main(int argc, const char * argv[]) {
                 fprintf(fo, "%lf %d %lf ", t, i, m[i]);
                 for (k = 1; k <= N_DIMS; k++) fprintf(fo, "%lf ", r[i][k]);
                 for (k = 1; k <= N_DIMS; k++) fprintf(fo, "%lf ", v[i][k]);
+                fprintf(fo, "%lf ", v[i][1] * v[i][1] + v[i][2] * v[i][2]);
+                fprintf(fo, "%lf ", 0.5 * m[i] * (v[i][1] * v[i][1] + v[i][2] * v[i][2]));
                 fprintf(fo, "\n");
             }
             f = 1;
@@ -170,7 +172,9 @@ int main(int argc, const char * argv[]) {
                     dp_n[k] += -m[i] * 2.0 * v[i][k];
                 }
             }
+        }
 
+        for (i = 1; i <= N; i++) {
             //	Entre partículas
             for (j = i + 1; j <= N; j++){
                 distance = 0.0;
@@ -194,7 +198,6 @@ int main(int argc, const char * argv[]) {
                     v[i][k] += m[j] * aux * dr[k];
                     v[j][k] -= m[i] * aux * dr[k];
                 }
-
             }
         }
     }
